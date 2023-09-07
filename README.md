@@ -70,9 +70,9 @@ async fn test_pool(manager: RedisConnectionManager) -> String {
     redis::pipe()
             .set(0, "Hello")
             .ignore()
-            .query_async(&mut connection)
+            .query_async(connection.as_mut())
             .await.unwrap();
 
-    redis::cmd("GET").arg(0).query_async(&mut connection).await.unwrap()
+    redis::cmd("GET").arg(0).query_async(connection.as_mut()).await.unwrap()
 }
 ```
