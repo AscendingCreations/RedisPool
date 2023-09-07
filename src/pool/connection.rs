@@ -31,14 +31,11 @@ impl Drop for RedisConnection {
         if self.connection.is_some() && self.pool.is_some() {
             let shared = self.pool.take().unwrap();
             let connection = self.connection.take().unwrap();
-            {
-                let pool = shared.pool.blocking_lock();
 
-                if pool.len() < pool.capacity() {
-                    // pool has space lets insert it back into the Pool
-                    if pool.push(connection).is_err() {
-                        panic!("Queue was maxed out");
-                    }
+            if shared.pool.len() < shared.pool.capacity() {
+                // pool has space lets insert it back into the Pool
+                if shared.pool.push(connection).is_err() {
+                    panic!("Queue was maxed out");
                 }
             }
         }
