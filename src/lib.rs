@@ -6,5 +6,10 @@ pub mod errors;
 pub mod factory;
 pub mod pool;
 
+pub use pool::DefaultRedisPool;
+
 #[cfg(feature = "cluster")]
 pub mod cluster;
+
+#[cfg(feature = "cluster")]
+pub use cluster::ClusterRedisPool;

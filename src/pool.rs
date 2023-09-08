@@ -8,10 +8,9 @@ pub type DefaultRedisPool = RedisPool<Client, Connection>;
 
 pub(crate) const DEFAULT_POOL_LIMIT: usize = 16;
 
-#[derive(Clone)]
 pub struct RedisPool<F, C>
 where
-    F: ConnectionFactory<C> + Send + Sync,
+    F: ConnectionFactory<C> + Send + Sync + Clone,
     C: redis::aio::ConnectionLike + Send,
 {
     pub(crate) client: F,
@@ -21,7 +20,7 @@ where
 
 impl<F, C> RedisPool<F, C>
 where
-    F: ConnectionFactory<C> + Send + Sync,
+    F: ConnectionFactory<C> + Send + Sync + Clone,
     C: redis::aio::ConnectionLike + Send,
 {
     pub async fn aquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
@@ -58,9 +57,23 @@ where
     }
 }
 
+impl<F, C> Clone for RedisPool<F, C>
+where
+    F: ConnectionFactory<C> + Send + Sync + Clone,
+    C: redis::aio::ConnectionLike + Send,
+{
+    fn clone(&self) -> Self {
+        return RedisPool {
+            client: self.client.clone(),
+            queue: self.queue.clone(),
+            sem: self.sem.clone(),
+        };
+    }
+}
+
 impl<F, C> Deref for RedisPool<F, C>
 where
-    F: ConnectionFactory<C> + Send + Sync,
+    F: ConnectionFactory<C> + Send + Sync + Clone,
     C: redis::aio::ConnectionLike + Send,
 {
     type Target = F;
@@ -93,7 +106,7 @@ const _: () = {
 
     fn assert_all<F, C>()
     where
-        F: ConnectionFactory<C> + Send + Sync,
+        F: ConnectionFactory<C> + Send + Sync + Clone,
         C: redis::aio::ConnectionLike + Send,
     {
         assert_send::<RedisPool<F, C>>();

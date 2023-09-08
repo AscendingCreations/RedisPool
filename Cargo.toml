@@ -1,12 +1,11 @@
 [package]
 name = "redis_pool"
 version = "0.1.1"
-authors = ["Andrew Wheeler <genusistimelord@gmail.com>"]
+authors = ["Andrew Wheeler <genusistimelord@gmail.com>", "Wil Gaboury"]
 description = "Library to Provide a redis client and cluster client pools."
 edition = "2021"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
-documentation = "https://docs.rs/axum_odbc"
 keywords = ["Redis", "Pool", "tokio"]
 repository = "https://github.com/AscendingCreations/RedisPool"
 
@@ -22,6 +21,7 @@ redis = { version = "0.23.3", features = ["aio", "tokio-comp", "cluster-async"]}
 crossbeam-queue = "0.3.8"
 
 [dev-dependencies]
-tokio = { version = "1.32.0", features = ["rt", "macros"] }
+tokio = { version = "1.32.0", features = ["rt-multi-thread", "macros"] }
 testcontainers = "0.14.0"
 anyhow = "1.0"
+axum = "0.6"
