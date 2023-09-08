@@ -4,7 +4,7 @@ use redis::{aio::Connection, Client, RedisResult};
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::Semaphore;
 
-const DEFAULT_POOL_LIMIT: usize = 16;
+pub(crate) const DEFAULT_POOL_LIMIT: usize = 16;
 
 #[derive(Clone)]
 pub struct RedisPool<F, C>
@@ -12,9 +12,9 @@ where
     F: ConnectionFactory<C>,
     C: redis::aio::ConnectionLike + Send,
 {
-    client: F,
-    queue: Arc<ArrayQueue<C>>,
-    sem: Arc<Semaphore>,
+    pub(crate) client: F,
+    pub(crate) queue: Arc<ArrayQueue<C>>,
+    pub(crate) sem: Arc<Semaphore>,
 }
 
 impl<F, C> RedisPool<F, C>

@@ -7,4 +7,4 @@ pub mod factory;
 pub mod pool;
 
 #[cfg(feature = "cluster")]
-pub mod cluster_pool;
+pub mod cluster;

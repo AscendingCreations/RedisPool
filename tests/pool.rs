@@ -15,9 +15,7 @@ pub async fn test_simple_get_set() -> anyhow::Result<()> {
         .with_exposed_port(REDIS_PORT);
     let redis = docker.run(image);
     let port = redis.get_host_port_ipv4(REDIS_PORT);
-    let client = redis::Client::open(format!("redis://localhost:{}", port))
-        .expect("Failed to connect to redis");
-
+    let client = redis::Client::open(format!("redis://localhost:{}", port))?;
     let pool = RedisPool::from(client);
 
     for i in 0..50 {
