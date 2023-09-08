@@ -32,6 +32,7 @@ redis_pool = "0.1.0"
 ```
 
 #### Cargo Feature Flags
+
 `axum`: Enables axum FromRequestParts to retrieve from State.
 `json`: Enabled serde's json for Redis.
 `cluster`: Enabled Redis Cluster Client and connections.
