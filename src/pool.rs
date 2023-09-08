@@ -1,7 +1,7 @@
 use crate::{connection::RedisPoolConnection, errors::RedisPoolError, factory::ConnectionFactory};
 use crossbeam_queue::ArrayQueue;
 use redis::{aio::Connection, Client, RedisResult};
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 use tokio::sync::Semaphore;
 
 const DEFAULT_POOL_LIMIT: usize = 16;
@@ -10,44 +10,45 @@ const DEFAULT_POOL_LIMIT: usize = 16;
 pub struct RedisPool<F, C>
 where
     F: ConnectionFactory<C>,
-    C: redis::aio::ConnectionLike + Send + Sync,
+    C: redis::aio::ConnectionLike + Send,
 {
-    pub pool: Arc<RedisPoolShared<F, C>>,
-}
-
-pub struct RedisPoolShared<F, C>
-where
-    F: ConnectionFactory<C>,
-    C: redis::aio::ConnectionLike + Send + Sync,
-{
-    pub client: F,
+    client: F,
     queue: Arc<ArrayQueue<C>>,
     sem: Arc<Semaphore>,
 }
 
-impl<F, C> RedisPoolShared<F, C>
+impl<F, C> RedisPool<F, C>
 where
     F: ConnectionFactory<C>,
-    C: redis::aio::ConnectionLike + Send + Sync,
+    C: redis::aio::ConnectionLike + Send,
 {
-    pub async fn aquire(&mut self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
+    pub async fn aquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
         let permit = self.sem.clone().acquire_owned().await?;
         let con = self.aquire_connection().await?;
         let queue = Arc::downgrade(&self.queue);
         Ok(RedisPoolConnection::new(con, queue, permit))
     }
 
-    async fn aquire_connection(&mut self) -> RedisResult<C> {
+    async fn aquire_connection(&self) -> RedisResult<C> {
         if let Some(mut con) = self.queue.as_ref().pop() {
-            let (n,) = redis::Pipeline::with_capacity(2)
+            let res = redis::Pipeline::with_capacity(2)
                 .cmd("UNWATCH")
                 .ignore()
                 .cmd("PING")
                 .arg(1)
                 .query_async::<_, (usize,)>(&mut con)
-                .await?;
-            if n == 1 {
-                return Ok(con);
+                .await;
+
+            match res {
+                Ok((1,)) => {
+                    return Ok(con);
+                }
+                Ok(_) => {
+                    tracing::trace!("connection ping returned wrong value");
+                }
+                Err(e) => {
+                    tracing::trace!("{}", e);
+                }
             }
         }
 
@@ -55,9 +56,9 @@ where
     }
 }
 
-impl RedisPoolShared<Client, Connection> {
+impl RedisPool<Client, Connection> {
     pub fn from_client(client: Client, limit: usize) -> Self {
-        RedisPoolShared {
+        RedisPool {
             client,
             queue: Arc::new(ArrayQueue::new(limit)),
             sem: Arc::new(Semaphore::new(limit)),
@@ -65,29 +66,20 @@ impl RedisPoolShared<Client, Connection> {
     }
 }
 
-impl From<Client> for RedisPoolShared<Client, Connection> {
+impl<F, C> Deref for RedisPool<F, C>
+where
+    F: ConnectionFactory<C>,
+    C: redis::aio::ConnectionLike + Send,
+{
+    type Target = F;
+
+    fn deref(&self) -> &Self::Target {
+        &self.client
+    }
+}
+
+impl From<Client> for RedisPool<Client, Connection> {
     fn from(value: Client) -> Self {
-        RedisPoolShared::from_client(value, DEFAULT_POOL_LIMIT)
-    }
-}
-
-#[cfg(feature = "cluster")]
-use redis::{cluster::ClusterClient, cluster_async::ClusterConnection};
-
-#[cfg(feature = "cluster")]
-impl RedisPoolShared<ClusterClient, ClusterConnection> {
-    pub fn from_cluster_client(client: ClusterClient, limit: usize) -> Self {
-        RedisPoolShared {
-            client,
-            queue: ArrayQueue::new(limit),
-            sem: Semaphore::new(limit),
-        }
-    }
-}
-
-#[cfg(feature = "cluster")]
-impl From<ClusterClient> for RedisPoolShared<ClusterClient, ClusterConnection> {
-    fn from(value: ClusterClient) -> Self {
-        RedisPoolShared::from_cluster_client(value, DEFAULT_POOL_LIMIT)
+        RedisPool::from_client(value, DEFAULT_POOL_LIMIT)
     }
 }

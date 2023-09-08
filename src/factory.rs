@@ -7,7 +7,7 @@ use redis::{
 #[async_trait]
 pub trait ConnectionFactory<C>
 where
-    C: ConnectionLike + Send + Sync,
+    C: ConnectionLike,
 {
     async fn create(&self) -> RedisResult<C>;
 }

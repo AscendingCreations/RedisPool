@@ -7,7 +7,7 @@ use tokio::sync::OwnedSemaphorePermit;
 
 pub struct RedisPoolConnection<C>
 where
-    C: redis::aio::ConnectionLike + Send + Sync,
+    C: redis::aio::ConnectionLike + Send,
 {
     // this field can be safley unwrapped because it will always be Some until it is dropped
     con: Option<C>,
@@ -20,7 +20,7 @@ where
 
 impl<C> RedisPoolConnection<C>
 where
-    C: redis::aio::ConnectionLike + Send + Sync,
+    C: redis::aio::ConnectionLike + Send,
 {
     pub fn new(con: C, queue: Weak<ArrayQueue<C>>, permit: OwnedSemaphorePermit) -> Self {
         RedisPoolConnection {
@@ -33,7 +33,7 @@ where
 
 impl<C> Drop for RedisPoolConnection<C>
 where
-    C: redis::aio::ConnectionLike + Send + Sync,
+    C: redis::aio::ConnectionLike + Send,
 {
     fn drop(&mut self) {
         if let Some(queue) = self.queue.upgrade() {
@@ -46,7 +46,7 @@ where
 
 impl<C> Deref for RedisPoolConnection<C>
 where
-    C: redis::aio::ConnectionLike + Send + Sync,
+    C: redis::aio::ConnectionLike + Send,
 {
     type Target = C;
 
@@ -57,7 +57,7 @@ where
 
 impl<C> DerefMut for RedisPoolConnection<C>
 where
-    C: redis::aio::ConnectionLike + Send + Sync,
+    C: redis::aio::ConnectionLike + Send,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.con.as_mut().unwrap()
