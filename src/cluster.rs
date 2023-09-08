@@ -1,10 +1,14 @@
 use std::sync::Arc;
 
+use async_trait::async_trait;
 use crossbeam_queue::ArrayQueue;
-use redis::{cluster::ClusterClient, cluster_async::ClusterConnection};
+use redis::{cluster::ClusterClient, cluster_async::ClusterConnection, RedisResult};
 use tokio::sync::Semaphore;
 
-use crate::pool::{RedisPool, DEFAULT_POOL_LIMIT};
+use crate::{
+    factory::ConnectionFactory,
+    pool::{RedisPool, DEFAULT_POOL_LIMIT},
+};
 
 pub type ClusterRedisPool = RedisPool<ClusterClient, ClusterConnection>;
 
@@ -21,5 +25,12 @@ impl ClusterRedisPool {
 impl From<ClusterClient> for ClusterRedisPool {
     fn from(value: ClusterClient) -> Self {
         ClusterRedisPool::new(value, DEFAULT_POOL_LIMIT)
+    }
+}
+
+#[async_trait]
+impl ConnectionFactory<ClusterConnection> for ClusterClient {
+    async fn create(&self) -> RedisResult<ClusterConnection> {
+        self.get_async_connection().await
     }
 }

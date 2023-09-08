@@ -18,14 +18,3 @@ impl ConnectionFactory<Connection> for Client {
         self.get_async_connection().await
     }
 }
-
-// #[cfg(feature = "cluster")]
-use redis::{cluster::ClusterClient, cluster_async::ClusterConnection};
-
-// #[cfg(feature = "cluster")]
-#[async_trait]
-impl ConnectionFactory<ClusterConnection> for ClusterClient {
-    async fn create(&self) -> RedisResult<ClusterConnection> {
-        self.get_async_connection().await
-    }
-}
