@@ -7,24 +7,24 @@ use tokio::sync::Semaphore;
 
 use crate::{
     factory::ConnectionFactory,
-    pool::{RedisPool, DEFAULT_POOL_LIMIT},
+    pool::{RedisPool, DEFAULT_CON_LIMIT, DEFAULT_POOL_SIZE},
 };
 
 pub type ClusterRedisPool = RedisPool<ClusterClient, ClusterConnection>;
 
 impl ClusterRedisPool {
-    pub fn new_cluster(client: ClusterClient, limit: usize) -> Self {
+    pub fn new_cluster(client: ClusterClient, pool_size: usize, con_limit: usize) -> Self {
         RedisPool {
             client,
-            queue: Arc::new(ArrayQueue::new(limit)),
-            sem: Arc::new(Semaphore::new(limit)),
+            queue: Arc::new(ArrayQueue::new(pool_size)),
+            sem: Arc::new(Semaphore::new(con_limit)),
         }
     }
 }
 
 impl From<ClusterClient> for ClusterRedisPool {
     fn from(value: ClusterClient) -> Self {
-        ClusterRedisPool::new_cluster(value, DEFAULT_POOL_LIMIT)
+        ClusterRedisPool::new_cluster(value, DEFAULT_POOL_SIZE, DEFAULT_CON_LIMIT)
     }
 }
 

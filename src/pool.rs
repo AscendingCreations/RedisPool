@@ -6,7 +6,8 @@ use tokio::sync::Semaphore;
 
 pub type DefaultRedisPool = RedisPool<Client, Connection>;
 
-pub(crate) const DEFAULT_POOL_LIMIT: usize = 16;
+pub const DEFAULT_POOL_SIZE: usize = 16;
+pub const DEFAULT_CON_LIMIT: usize = 512;
 
 pub struct RedisPool<F, C>
 where
@@ -83,18 +84,18 @@ where
 }
 
 impl DefaultRedisPool {
-    pub fn new(client: Client, limit: usize) -> Self {
+    pub fn new(client: Client, pool_size: usize, con_limit: usize) -> Self {
         RedisPool {
             client,
-            queue: Arc::new(ArrayQueue::new(limit)),
-            sem: Arc::new(Semaphore::new(limit)),
+            queue: Arc::new(ArrayQueue::new(pool_size)),
+            sem: Arc::new(Semaphore::new(con_limit)),
         }
     }
 }
 
 impl From<Client> for DefaultRedisPool {
     fn from(value: Client) -> Self {
-        DefaultRedisPool::new(value, DEFAULT_POOL_LIMIT)
+        DefaultRedisPool::new(value, DEFAULT_POOL_SIZE, DEFAULT_CON_LIMIT)
     }
 }
 

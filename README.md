@@ -46,7 +46,7 @@ use std::net::SocketAddr;
 async fn main() {
     let redis_url = "redis://default:YourSecretPassWord@127.0.0.1:6379/0";
     let client = redis::Client::open(redis_url).expect("Error while testing the connection");
-    let pool = RedisPool::new(client, 8);
+    let pool = RedisPool::from(client);
 
     // build our application with some routes
     let app = Router::new()
