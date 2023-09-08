@@ -4,6 +4,8 @@ use redis::{aio::Connection, Client, RedisResult};
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::Semaphore;
 
+pub type DefaultRedisPool = RedisPool<Client, Connection>;
+
 pub(crate) const DEFAULT_POOL_LIMIT: usize = 16;
 
 #[derive(Clone)]
@@ -56,16 +58,6 @@ where
     }
 }
 
-impl RedisPool<Client, Connection> {
-    pub fn from_client(client: Client, limit: usize) -> Self {
-        RedisPool {
-            client,
-            queue: Arc::new(ArrayQueue::new(limit)),
-            sem: Arc::new(Semaphore::new(limit)),
-        }
-    }
-}
-
 impl<F, C> Deref for RedisPool<F, C>
 where
     F: ConnectionFactory<C>,
@@ -78,7 +70,17 @@ where
     }
 }
 
-impl From<Client> for RedisPool<Client, Connection> {
+impl DefaultRedisPool {
+    pub fn from_client(client: Client, limit: usize) -> Self {
+        RedisPool {
+            client,
+            queue: Arc::new(ArrayQueue::new(limit)),
+            sem: Arc::new(Semaphore::new(limit)),
+        }
+    }
+}
+
+impl From<Client> for DefaultRedisPool {
     fn from(value: Client) -> Self {
         RedisPool::from_client(value, DEFAULT_POOL_LIMIT)
     }

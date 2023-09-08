@@ -6,7 +6,9 @@ use tokio::sync::Semaphore;
 
 use crate::pool::{RedisPool, DEFAULT_POOL_LIMIT};
 
-impl RedisPool<ClusterClient, ClusterConnection> {
+pub type ClusterRedisPool = RedisPool<ClusterClient, ClusterConnection>;
+
+impl ClusterRedisPool {
     pub fn from_cluster_client(client: ClusterClient, limit: usize) -> Self {
         RedisPool {
             client,
@@ -16,7 +18,7 @@ impl RedisPool<ClusterClient, ClusterConnection> {
     }
 }
 
-impl From<ClusterClient> for RedisPool<ClusterClient, ClusterConnection> {
+impl From<ClusterClient> for ClusterRedisPool {
     fn from(value: ClusterClient) -> Self {
         RedisPool::from_cluster_client(value, DEFAULT_POOL_LIMIT)
     }
