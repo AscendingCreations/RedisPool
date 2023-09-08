@@ -38,7 +38,7 @@ redis_pool = "0.1"
 # Example
 
 ```rust no_run
-use redis_pool::DefaultRedisPool;
+use redis_pool::{RedisPool, DefaultRedisPool};
 use axum::{Router, routing::get, extract::State};
 use std::net::SocketAddr;
 
@@ -46,7 +46,7 @@ use std::net::SocketAddr;
 async fn main() {
     let redis_url = "redis://default:YourSecretPassWord@127.0.0.1:6379/0";
     let client = redis::Client::open(redis_url).expect("Error while testing the connection");
-    let pool = DefaultRedisPool::new(client, 5);
+    let pool = RedisPool::new(client, 8);
 
     // build our application with some routes
     let app = Router::new()

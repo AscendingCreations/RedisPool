@@ -14,8 +14,8 @@ where
     C: redis::aio::ConnectionLike + Send,
 {
     pub(crate) client: F,
-    pub(crate) queue: Arc<ArrayQueue<C>>,
     pub(crate) sem: Arc<Semaphore>,
+    pub(crate) queue: Arc<ArrayQueue<C>>,
 }
 
 impl<F, C> RedisPool<F, C>
@@ -26,12 +26,11 @@ where
     pub async fn aquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
         let permit = self.sem.clone().acquire_owned().await?;
         let con = self.aquire_connection().await?;
-        let queue = Arc::downgrade(&self.queue);
-        Ok(RedisPoolConnection::new(con, queue, permit))
+        Ok(RedisPoolConnection::new(con, permit, self.queue.clone()))
     }
 
     async fn aquire_connection(&self) -> RedisResult<C> {
-        while let Some(mut con) = self.queue.as_ref().pop() {
+        while let Some(mut con) = self.queue.pop() {
             let res = redis::Pipeline::with_capacity(2)
                 .cmd("UNWATCH")
                 .ignore()

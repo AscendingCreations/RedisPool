@@ -7,6 +7,7 @@ pub mod factory;
 pub mod pool;
 
 pub use pool::DefaultRedisPool;
+pub use pool::RedisPool;
 
 #[cfg(feature = "cluster")]
 pub mod cluster;

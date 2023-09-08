@@ -1,5 +1,5 @@
 use std::ops::{Deref, DerefMut};
-use std::sync::Weak;
+use std::sync::Arc;
 
 use crossbeam_queue::ArrayQueue;
 use redis::{aio::ConnectionLike, Cmd, RedisFuture, Value};
@@ -9,12 +9,10 @@ pub struct RedisPoolConnection<C>
 where
     C: redis::aio::ConnectionLike + Send,
 {
-    // this field can be safley unwrapped because it will always be Some until it is dropped
+    // This field can be safley unwrapped because it is always initialized to Some
+    // and only set to None when dropped
     con: Option<C>,
-    queue: Weak<ArrayQueue<C>>,
-
-    // permit is only used as drop will allow more connections to be taken from queue
-    #[allow(dead_code)]
+    queue: Arc<ArrayQueue<C>>,
     permit: OwnedSemaphorePermit,
 }
 
@@ -22,11 +20,11 @@ impl<C> RedisPoolConnection<C>
 where
     C: redis::aio::ConnectionLike + Send,
 {
-    pub fn new(con: C, queue: Weak<ArrayQueue<C>>, permit: OwnedSemaphorePermit) -> Self {
+    pub fn new(con: C, permit: OwnedSemaphorePermit, queue: Arc<ArrayQueue<C>>) -> Self {
         RedisPoolConnection {
             con: Some(con),
-            queue,
             permit,
+            queue,
         }
     }
 }
@@ -36,11 +34,11 @@ where
     C: redis::aio::ConnectionLike + Send,
 {
     fn drop(&mut self) {
-        if let Some(queue) = self.queue.upgrade() {
-            // size of queue is equal to number of semaphore permits it should
-            // never be possible to push over the size of the queue
-            let _ = queue.push(std::mem::replace(&mut self.con, Option::None).unwrap());
-        }
+        // the size of queue is equal to number of semaphore permits, so it shouldn't
+        // be possible for push to result in an error
+        let _ = self
+            .queue
+            .push(std::mem::replace(&mut self.con, Option::None).unwrap());
     }
 }
 
