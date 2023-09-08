@@ -82,7 +82,7 @@ impl DefaultRedisPool {
 
 impl From<Client> for DefaultRedisPool {
     fn from(value: Client) -> Self {
-        RedisPool::new(value, DEFAULT_POOL_LIMIT)
+        DefaultRedisPool::new(value, DEFAULT_POOL_LIMIT)
     }
 }
 

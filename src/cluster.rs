@@ -9,7 +9,7 @@ use crate::pool::{RedisPool, DEFAULT_POOL_LIMIT};
 pub type ClusterRedisPool = RedisPool<ClusterClient, ClusterConnection>;
 
 impl ClusterRedisPool {
-    pub fn from_cluster_client(client: ClusterClient, limit: usize) -> Self {
+    pub fn new(client: ClusterClient, limit: usize) -> Self {
         RedisPool {
             client,
             queue: Arc::new(ArrayQueue::new(limit)),
@@ -20,6 +20,6 @@ impl ClusterRedisPool {
 
 impl From<ClusterClient> for ClusterRedisPool {
     fn from(value: ClusterClient) -> Self {
-        RedisPool::from_cluster_client(value, DEFAULT_POOL_LIMIT)
+        ClusterRedisPool::new(value, DEFAULT_POOL_LIMIT)
     }
 }
