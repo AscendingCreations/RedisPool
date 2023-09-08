@@ -49,8 +49,9 @@ async fn main() {
     let pool = DefaultRedisPool::new(client, 5);
 
     // build our application with some routes
-    let app = Router::with_state(pool)
-        .route("/test", get(test_pool));
+    let app = Router::new()
+        .route("/test", get(test_pool))
+        .with_state(pool);
 
     // run it
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
