@@ -32,7 +32,7 @@ where
     }
 
     async fn aquire_connection(&self) -> RedisResult<C> {
-        if let Some(mut con) = self.queue.as_ref().pop() {
+        while let Some(mut con) = self.queue.as_ref().pop() {
             let res = redis::Pipeline::with_capacity(2)
                 .cmd("UNWATCH")
                 .ignore()
@@ -49,7 +49,7 @@ where
                     tracing::trace!("connection ping returned wrong value");
                 }
                 Err(e) => {
-                    tracing::trace!("{}", e);
+                    tracing::trace!("bad redis connection: {}", e);
                 }
             }
         }
