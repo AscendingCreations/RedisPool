@@ -66,7 +66,7 @@ where
 
 impl<C> ConnectionLike for RedisPoolConnection<C>
 where
-    C: redis::aio::ConnectionLike + Send + Sync,
+    C: redis::aio::ConnectionLike + Send,
 {
     fn req_packed_command<'a>(&'a mut self, cmd: &'a Cmd) -> RedisFuture<'a, Value> {
         self.con.as_mut().unwrap().req_packed_command(cmd)

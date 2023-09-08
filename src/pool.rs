@@ -11,7 +11,7 @@ pub(crate) const DEFAULT_POOL_LIMIT: usize = 16;
 #[derive(Clone)]
 pub struct RedisPool<F, C>
 where
-    F: ConnectionFactory<C>,
+    F: ConnectionFactory<C> + Send + Sync,
     C: redis::aio::ConnectionLike + Send,
 {
     pub(crate) client: F,
@@ -21,7 +21,7 @@ where
 
 impl<F, C> RedisPool<F, C>
 where
-    F: ConnectionFactory<C>,
+    F: ConnectionFactory<C> + Send + Sync,
     C: redis::aio::ConnectionLike + Send,
 {
     pub async fn aquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
@@ -60,7 +60,7 @@ where
 
 impl<F, C> Deref for RedisPool<F, C>
 where
-    F: ConnectionFactory<C>,
+    F: ConnectionFactory<C> + Send + Sync,
     C: redis::aio::ConnectionLike + Send,
 {
     type Target = F;
@@ -71,7 +71,7 @@ where
 }
 
 impl DefaultRedisPool {
-    pub fn from_client(client: Client, limit: usize) -> Self {
+    pub fn new(client: Client, limit: usize) -> Self {
         RedisPool {
             client,
             queue: Arc::new(ArrayQueue::new(limit)),
@@ -82,6 +82,21 @@ impl DefaultRedisPool {
 
 impl From<Client> for DefaultRedisPool {
     fn from(value: Client) -> Self {
-        RedisPool::from_client(value, DEFAULT_POOL_LIMIT)
+        RedisPool::new(value, DEFAULT_POOL_LIMIT)
     }
 }
+
+// compile time assert pool thread saftey
+const _: () = {
+    fn assert_send<T: Send>() {}
+    fn assert_sync<T: Sync>() {}
+
+    fn assert_all<F, C>()
+    where
+        F: ConnectionFactory<C> + Send + Sync,
+        C: redis::aio::ConnectionLike + Send,
+    {
+        assert_send::<RedisPool<F, C>>();
+        assert_sync::<RedisPool<F, C>>();
+    }
+};
