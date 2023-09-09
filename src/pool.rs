@@ -1,10 +1,8 @@
 use crate::{connection::RedisPoolConnection, errors::RedisPoolError, factory::ConnectionFactory};
 use crossbeam_queue::ArrayQueue;
-use redis::{aio::Connection, Client, RedisResult};
+use redis::RedisResult;
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::Semaphore;
-
-pub type DefaultRedisPool = RedisPool<Client, Connection>;
 
 pub const DEFAULT_POOL_SIZE: usize = 16;
 pub const DEFAULT_CON_LIMIT: usize = 512;
@@ -80,22 +78,6 @@ where
 
     fn deref(&self) -> &Self::Target {
         &self.client
-    }
-}
-
-impl DefaultRedisPool {
-    pub fn new(client: Client, pool_size: usize, con_limit: usize) -> Self {
-        RedisPool {
-            client,
-            queue: Arc::new(ArrayQueue::new(pool_size)),
-            sem: Arc::new(Semaphore::new(con_limit)),
-        }
-    }
-}
-
-impl From<Client> for DefaultRedisPool {
-    fn from(value: Client) -> Self {
-        DefaultRedisPool::new(value, DEFAULT_POOL_SIZE, DEFAULT_CON_LIMIT)
     }
 }
 
