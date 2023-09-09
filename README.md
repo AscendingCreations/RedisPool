@@ -38,7 +38,7 @@ redis_pool = "0.1"
 # Example
 
 ```rust no_run
-use redis_pool::{RedisPool, DefaultRedisPool};
+use redis_pool::{RedisPool, SingleRedisPool};
 use axum::{Router, routing::get, extract::State};
 use std::net::SocketAddr;
 
@@ -62,7 +62,7 @@ async fn main() {
         .unwrap();
 }
 
-async fn test_pool(State(pool): State<DefaultRedisPool>) -> String {
+async fn test_pool(State(pool): State<SingleRedisPool>) -> String {
     let mut connection = pool.aquire().await.unwrap();
     let _: () = redis::pipe()
             .set(0, "Hello")
