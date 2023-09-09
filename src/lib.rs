@@ -5,10 +5,9 @@ pub mod connection;
 pub mod errors;
 pub mod factory;
 pub mod pool;
-pub mod single;
 
 pub use pool::RedisPool;
-pub use single::SingleRedisPool;
+pub use pool::SingleRedisPool;
 
 #[cfg(feature = "cluster")]
 pub mod cluster;

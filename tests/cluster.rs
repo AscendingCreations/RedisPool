@@ -2,7 +2,7 @@ mod utils;
 
 use anyhow::Context;
 use futures::future::join_all;
-use redis_pool::ClusterRedisPool;
+use redis_pool::{ClusterRedisPool, RedisPool};
 use serial_test::serial;
 use testcontainers::clients::Cli;
 use utils::TestClusterRedis;
@@ -12,14 +12,14 @@ use utils::TestClusterRedis;
 pub async fn test_simple_get_set_series() -> anyhow::Result<()> {
     let docker = Cli::docker();
     let cluster = TestClusterRedis::new(&docker);
-    let pool = ClusterRedisPool::from(cluster.client());
+    let pool = RedisPool::from(cluster.client());
 
     for i in 0..1000 {
         let mut con = pool.aquire().await?;
         let (value,) = redis::Pipeline::with_capacity(2)
-            .set("test", i)
+            .set(i, i)
             .ignore()
-            .get("test")
+            .get(i)
             .query_async::<_, (i64,)>(&mut con)
             .await?;
         assert_eq!(i, value);
@@ -36,7 +36,7 @@ const DATA: [u8; DATA_SIZE] = [1; DATA_SIZE];
 pub async fn test_simple_get_set_parrallel() -> anyhow::Result<()> {
     let docker = Cli::docker();
     let cluster = TestClusterRedis::new(&docker);
-    let pool = ClusterRedisPool::from(cluster.client());
+    let pool = RedisPool::from(cluster.client());
 
     for value in join_all((0..1000).map(|i| {
         let i = i;

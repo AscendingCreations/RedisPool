@@ -74,3 +74,15 @@ async fn test_pool(State(pool): State<SingleRedisPool>) -> String {
     redis::cmd("GET").arg(0).query_async(&mut connection).await.unwrap()
 }
 ```
+
+## Running Tests
+
+Docker must be installed because this library utilizes testcontainers to spin up redis intances. Additionally, the `tcpkill` utility must be installed and runnable without using sudo. These permissions changes can be acheived on linux by using the following commands and then logging in and out of your account:
+
+```bash
+sudo groupadd pcap
+sudo usermod -a -G pcap $USER
+sudo chgrp pcap $(sudo which tcpkill)
+sudo chmod 750 $(sudo which tcpkill)
+sudo setcap cap_net_raw,cap_net_admin=eip $(sudo which tcpkill)
+```

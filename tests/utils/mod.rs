@@ -1,11 +1,20 @@
 #![allow(dead_code)]
 
+use std::ops::Deref;
+
+use async_trait::async_trait;
+use futures::FutureExt;
+use redis::{
+    aio::{Connection, ConnectionLike},
+    Client, Cmd, ErrorKind, RedisError, RedisFuture, RedisResult, Value,
+};
+use redis_pool::factory::ConnectionFactory;
 use testcontainers::{
     clients::Cli, core::WaitFor, images::generic::GenericImage, Container, RunnableImage,
 };
 
-const REDIS_IMG_NAME: &str = "redis";
-const REDIS_IMG_VER: &str = "alpine";
+const REDIS_IMG_NAME: &str = "redis-single";
+const REDIS_IMG_VER: &str = "latest";
 const REDIS_PORT: u16 = 6379;
 const REDIS_READY_MSG: &str = "Ready to accept connections tcp";
 
@@ -49,6 +58,14 @@ impl<'a> TestRedis<'a> {
     }
 }
 
+impl<'a> Deref for TestRedis<'a> {
+    type Target = Container<'a, GenericImage>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.container
+    }
+}
+
 pub struct TestClusterRedis<'a> {
     container: Container<'a, GenericImage>,
 }
@@ -73,5 +90,75 @@ impl<'a> TestClusterRedis<'a> {
         )
         .build()
         .expect("Client failed to connect")
+    }
+}
+
+#[derive(Clone)]
+pub struct ClosableConnectionFactory(pub Client);
+
+#[async_trait]
+impl ConnectionFactory<ClosableConnection> for ClosableConnectionFactory {
+    async fn create(&self) -> RedisResult<ClosableConnection> {
+        Ok(ClosableConnection::new(
+            self.0.get_async_connection().await?,
+        ))
+    }
+}
+
+pub struct ClosableConnection {
+    con: Connection,
+    open: bool,
+}
+
+impl ClosableConnection {
+    pub fn new(con: Connection) -> Self {
+        ClosableConnection { con, open: true }
+    }
+
+    pub fn close(&mut self) {
+        self.open = false;
+    }
+}
+
+impl ConnectionLike for ClosableConnection {
+    fn req_packed_command<'a>(&'a mut self, cmd: &'a Cmd) -> RedisFuture<'a, Value> {
+        if !self.open {
+            (async move {
+                Err(RedisError::from((
+                    ErrorKind::ResponseError,
+                    "closed connection",
+                )))
+            })
+            .boxed()
+        } else {
+            self.con.req_packed_command(cmd)
+        }
+    }
+
+    fn req_packed_commands<'a>(
+        &'a mut self,
+        cmd: &'a redis::Pipeline,
+        offset: usize,
+        count: usize,
+    ) -> redis::RedisFuture<'a, Vec<redis::Value>> {
+        if !self.open {
+            (async move {
+                Err(RedisError::from((
+                    ErrorKind::ResponseError,
+                    "closed connection",
+                )))
+            })
+            .boxed()
+        } else {
+            self.con.req_packed_commands(cmd, offset, count)
+        }
+    }
+
+    fn get_db(&self) -> i64 {
+        if !self.open {
+            0
+        } else {
+            self.con.get_db()
+        }
     }
 }

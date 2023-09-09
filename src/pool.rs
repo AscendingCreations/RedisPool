@@ -1,6 +1,6 @@
 use crate::{connection::RedisPoolConnection, errors::RedisPoolError, factory::ConnectionFactory};
 use crossbeam_queue::ArrayQueue;
-use redis::RedisResult;
+use redis::{aio::Connection, Client, RedisResult};
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::Semaphore;
 
@@ -12,9 +12,9 @@ where
     F: ConnectionFactory<C> + Send + Sync + Clone,
     C: redis::aio::ConnectionLike + Send,
 {
-    pub(crate) client: F,
-    pub(crate) sem: Arc<Semaphore>,
-    pub(crate) queue: Arc<ArrayQueue<C>>,
+    factory: F,
+    sem: Arc<Semaphore>,
+    queue: Arc<ArrayQueue<C>>,
 }
 
 impl<F, C> RedisPool<F, C>
@@ -22,6 +22,14 @@ where
     F: ConnectionFactory<C> + Send + Sync + Clone,
     C: redis::aio::ConnectionLike + Send,
 {
+    pub fn new(factory: F, pool_size: usize, con_limit: usize) -> Self {
+        return RedisPool {
+            factory,
+            queue: Arc::new(ArrayQueue::new(pool_size)),
+            sem: Arc::new(Semaphore::new(con_limit)),
+        };
+    }
+
     pub async fn aquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
         let permit = self.sem.clone().acquire_owned().await?;
         let con = self.aquire_connection().await?;
@@ -51,7 +59,7 @@ where
             }
         }
 
-        self.client.create().await
+        self.factory.create().await
     }
 }
 
@@ -62,7 +70,7 @@ where
 {
     fn clone(&self) -> Self {
         return RedisPool {
-            client: self.client.clone(),
+            factory: self.factory.clone(),
             queue: self.queue.clone(),
             sem: self.sem.clone(),
         };
@@ -77,7 +85,15 @@ where
     type Target = F;
 
     fn deref(&self) -> &Self::Target {
-        &self.client
+        &self.factory
+    }
+}
+
+pub type SingleRedisPool = RedisPool<Client, Connection>;
+
+impl From<Client> for SingleRedisPool {
+    fn from(value: Client) -> Self {
+        RedisPool::new(value, DEFAULT_POOL_SIZE, DEFAULT_CON_LIMIT)
     }
 }
 
