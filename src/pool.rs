@@ -13,8 +13,8 @@ where
     C: redis::aio::ConnectionLike + Send,
 {
     factory: F,
-    sem: Arc<Semaphore>,
     queue: Arc<ArrayQueue<C>>,
+    sem: Option<Arc<Semaphore>>,
 }
 
 impl<F, C> RedisPool<F, C>
@@ -22,16 +22,23 @@ where
     F: ConnectionFactory<C> + Send + Sync + Clone,
     C: redis::aio::ConnectionLike + Send,
 {
-    pub fn new(factory: F, pool_size: usize, con_limit: usize) -> Self {
+    pub fn new(factory: F, pool_size: usize, con_limit: Option<usize>) -> Self {
+        if pool_size > con_limit.unwrap_or(usize::MAX) {
+            tracing::warn!("pool size is less then connection limit");
+        }
+
         return RedisPool {
             factory,
             queue: Arc::new(ArrayQueue::new(pool_size)),
-            sem: Arc::new(Semaphore::new(con_limit)),
+            sem: con_limit.map(|lim| Arc::new(Semaphore::new(lim))),
         };
     }
 
     pub async fn aquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
-        let permit = self.sem.clone().acquire_owned().await?;
+        let permit = match &self.sem {
+            Some(sem) => Some(sem.clone().acquire_owned().await?),
+            None => None,
+        };
         let con = self.aquire_connection().await?;
         Ok(RedisPoolConnection::new(con, permit, self.queue.clone()))
     }
@@ -93,7 +100,7 @@ pub type SingleRedisPool = RedisPool<Client, Connection>;
 
 impl From<Client> for SingleRedisPool {
     fn from(value: Client) -> Self {
-        RedisPool::new(value, DEFAULT_POOL_SIZE, DEFAULT_CON_LIMIT)
+        RedisPool::new(value, DEFAULT_POOL_SIZE, Some(DEFAULT_CON_LIMIT))
     }
 }
 

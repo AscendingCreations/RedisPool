@@ -10,7 +10,7 @@ pub type ClusterRedisPool = RedisPool<ClusterClient, ClusterConnection>;
 
 impl From<ClusterClient> for ClusterRedisPool {
     fn from(value: ClusterClient) -> Self {
-        RedisPool::new(value, DEFAULT_POOL_SIZE, DEFAULT_CON_LIMIT)
+        RedisPool::new(value, DEFAULT_POOL_SIZE, Some(DEFAULT_CON_LIMIT))
     }
 }
 

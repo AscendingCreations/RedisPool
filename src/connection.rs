@@ -12,15 +12,15 @@ where
     // This field can be safley unwrapped because it is always initialized to Some
     // and only set to None when dropped
     con: Option<C>,
+    permit: Option<OwnedSemaphorePermit>,
     queue: Arc<ArrayQueue<C>>,
-    permit: OwnedSemaphorePermit,
 }
 
 impl<C> RedisPoolConnection<C>
 where
     C: redis::aio::ConnectionLike + Send,
 {
-    pub fn new(con: C, permit: OwnedSemaphorePermit, queue: Arc<ArrayQueue<C>>) -> Self {
+    pub fn new(con: C, permit: Option<OwnedSemaphorePermit>, queue: Arc<ArrayQueue<C>>) -> Self {
         RedisPoolConnection {
             con: Some(con),
             permit,

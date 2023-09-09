@@ -80,7 +80,7 @@ async fn get_set_byte_array<C: ConnectionLike>(key: &str, con: &mut C) -> anyhow
 pub async fn test_bad_connection_eviction() -> anyhow::Result<()> {
     let docker = Cli::docker();
     let redis = TestRedis::new(&docker);
-    let pool = RedisPool::new(ClosableConnectionFactory(redis.client()), 1, 1);
+    let pool = RedisPool::new(ClosableConnectionFactory(redis.client()), 1, Some(1));
     let mut con = pool.aquire().await.context("Failed to open connection")?;
 
     con.close();
