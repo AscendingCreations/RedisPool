@@ -34,11 +34,7 @@ where
     C: redis::aio::ConnectionLike + Send,
 {
     fn drop(&mut self) {
-        // the size of queue is equal to number of semaphore permits, so it shouldn't
-        // be possible for push to result in an error
-        let _ = self
-            .queue
-            .push(std::mem::replace(&mut self.con, Option::None).unwrap());
+        let _ = self.queue.push(self.con.take().unwrap());
     }
 }
 
