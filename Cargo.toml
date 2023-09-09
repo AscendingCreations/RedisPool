@@ -27,3 +27,7 @@ anyhow = "1.0"
 axum = "0.6"
 futures = "0.3.28"
 redis_pool = { path = ".", features = ["cluster"]}
+tempfile = "=3.6.0"
+socket2 = "0.4"
+rand = "0.8"
+serial_test = "0.4"
