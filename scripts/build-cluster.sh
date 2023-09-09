@@ -1,3 +1,5 @@
 #!/bin/bash
-cd docker
+
+cd "$(dirname "$0")"
+cd ../docker
 docker build . --tag redis-cluster
