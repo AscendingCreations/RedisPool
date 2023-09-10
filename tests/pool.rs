@@ -83,20 +83,24 @@ pub async fn test_bad_connection_eviction() -> anyhow::Result<()> {
     let pool = RedisPool::new(ClosableConnectionFactory(redis.client()), 1, Some(1));
     let mut con = pool.aquire().await.context("Failed to open connection")?;
 
+    get_set_byte_array("foo", &mut con)
+        .await
+        .context("Failed to get/set from redis")?;
+
     con.close();
 
     get_set_byte_array("foo", &mut con)
         .await
         .err()
-        .context("Should fail")?;
+        .context("Closed connection unexpectedly worked")?;
 
     drop(con);
 
-    let mut con = pool.aquire().await.context("Should give new connection")?;
+    let mut con = pool.aquire().await.context("Failed to open connection")?;
 
     get_set_byte_array("foo", &mut con)
         .await
-        .context("Shouldn't fail")?;
+        .context("Failed to get/set from redis")?;
 
     Ok(())
 }

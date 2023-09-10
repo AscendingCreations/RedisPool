@@ -33,7 +33,7 @@ redis_pool = "0.1"
 
 #### Cargo Feature Flags
 
-`cluster`: Enabled Redis Cluster Client and connections.
+`cluster`: Enables Redis Cluster Client and connections.
 
 # Example
 
@@ -77,12 +77,4 @@ async fn test_pool(State(pool): State<SingleRedisPool>) -> String {
 
 ## Running Tests
 
-Docker must be installed because this library utilizes testcontainers to spin up redis intances. Additionally, the `tcpkill` utility must be installed and runnable without using sudo. These permissions changes can be acheived on linux by using the following commands and then logging in and out of your account:
-
-```bash
-sudo groupadd pcap
-sudo usermod -a -G pcap $USER
-sudo chgrp pcap $(sudo which tcpkill)
-sudo chmod 750 $(sudo which tcpkill)
-sudo setcap cap_net_raw,cap_net_admin=eip $(sudo which tcpkill)
-```
+Docker must be installed because this library utilizes [testcontainers](https://github.com/testcontainers/testcontainers-rs) to spin up redis intances. Additionally, the images contained in the `docker` directory need to be built and accessible in your local registry; this can be accomplished by running `./docker/build.sh`.
