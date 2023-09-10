@@ -28,33 +28,30 @@ RedisPool uses [`tokio`] runtime.
 ```toml
 # Cargo.toml
 [dependencies]
-redis_pool = "0.1.0"
+redis_pool = "0.1"
 ```
 
 #### Cargo Feature Flags
-`axum`: Enables axum FromRequestParts to retrieve from State.
-`json`: Enabled serde's json for Redis.
-`cluster`: Enabled Redis Cluster Client and connections.
+
+`cluster`: Enables Redis Cluster Client and connections.
 
 # Example
 
 ```rust no_run
-use redis_pool::{RedisConnectionManager};
-use axum::{
-    Router,
-    routing::get,
-};
-use std::time::Duration;
+use redis_pool::{RedisPool, SingleRedisPool};
+use axum::{Router, routing::get, extract::State};
+use std::net::SocketAddr;
 
 #[tokio::main]
 async fn main() {
     let redis_url = "redis://default:YourSecretPassWord@127.0.0.1:6379/0";
     let client = redis::Client::open(redis_url).expect("Error while testing the connection");
-    let manager = RedisConnectionManager::new(client, 5);
+    let pool = RedisPool::from(client);
 
     // build our application with some routes
-    let app = Router::with_state(manager)
-        .route("/drop", get(drop_table));
+    let app = Router::new()
+        .route("/test", get(test_pool))
+        .with_state(pool);
 
     // run it
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -65,14 +62,19 @@ async fn main() {
         .unwrap();
 }
 
-async fn test_pool(manager: RedisConnectionManager) -> String {
-    let mut connection = manager.aquire().await.unwrap();
-    redis::pipe()
+async fn test_pool(State(pool): State<SingleRedisPool>) -> String {
+    let mut connection = pool.aquire().await.unwrap();
+    let _: () = redis::pipe()
             .set(0, "Hello")
             .ignore()
-            .query_async(connection.as_mut())
-            .await.unwrap();
+            .query_async(&mut connection)
+            .await
+            .unwrap();
 
-    redis::cmd("GET").arg(0).query_async(connection.as_mut()).await.unwrap()
+    redis::cmd("GET").arg(0).query_async(&mut connection).await.unwrap()
 }
 ```
+
+## Running Tests
+
+Docker must be installed because this library utilizes [testcontainers](https://github.com/testcontainers/testcontainers-rs) to spin up redis intances. Additionally, the images contained in the `docker` directory need to be built and accessible in your local registry; this can be accomplished by running `./docker/build.sh`.

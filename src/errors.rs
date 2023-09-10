@@ -1,15 +1,10 @@
 use thiserror::Error;
+use tokio::sync::AcquireError;
 
 #[derive(Error, Debug)]
-pub enum RedisError {
-    #[error(transparent)]
-    IO(#[from] std::io::Error),
+pub enum RedisPoolError {
     #[error(transparent)]
     Redis(#[from] redis::RedisError),
-    #[error("Lock is poisoned {msg} ")]
-    LockError { msg: String },
     #[error(transparent)]
-    TokioJoin(#[from] tokio::task::JoinError),
-    #[error("unknown error")]
-    Unknown,
+    AcquireError(#[from] AcquireError),
 }

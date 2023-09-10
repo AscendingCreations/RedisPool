@@ -1,18 +1,16 @@
-#![doc = include_str!("../README.md")]
 #![allow(dead_code)]
+#![doc = include_str!("../README.md")]
 
-mod errors;
-mod manager;
-mod pool;
+pub mod connection;
+pub mod errors;
+pub mod factory;
+pub mod pool;
 
-pub use errors::RedisError;
-pub use manager::RedisConnectionManager;
-pub use pool::*;
-
-pub use redis;
-
-#[cfg(feature = "cluster")]
-mod clustermanager;
+pub use pool::RedisPool;
+pub use pool::SingleRedisPool;
 
 #[cfg(feature = "cluster")]
-pub use clustermanager::RedisClusterManager;
+pub mod cluster;
+
+#[cfg(feature = "cluster")]
+pub use cluster::ClusterRedisPool;
