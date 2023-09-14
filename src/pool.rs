@@ -24,7 +24,7 @@ where
 {
     pub fn new(factory: F, pool_size: usize, con_limit: Option<usize>) -> Self {
         if pool_size > con_limit.unwrap_or(usize::MAX) {
-            tracing::warn!("pool size is less then connection limit");
+            tracing::warn!("pool size is greater then connection limit");
         }
 
         return RedisPool {
@@ -58,10 +58,10 @@ where
                     return Ok(con);
                 }
                 Ok(_) => {
-                    tracing::trace!("connection ping returned wrong value");
+                    tracing::warn!("connection ping returned wrong value");
                 }
                 Err(e) => {
-                    tracing::trace!("bad redis connection: {}", e);
+                    tracing::warn!("bad redis connection: {}", e);
                 }
             }
         }
