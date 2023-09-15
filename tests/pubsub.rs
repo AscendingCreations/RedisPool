@@ -39,7 +39,12 @@ pub async fn test_monitor() {
     let redis = TestRedis::new(&docker);
     let pool = RedisPool::from(redis.client());
 
-    let mut rx = pool.aquire().await.unwrap().into_monitor();
+    let mut rx = pool
+        .factory()
+        .get_async_connection()
+        .await
+        .unwrap()
+        .into_monitor();
     let _ = rx.monitor().await;
 
     let mut tx = pool.aquire().await.unwrap();

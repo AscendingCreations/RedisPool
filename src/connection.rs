@@ -1,7 +1,6 @@
 use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
-use async_trait::async_trait;
 use crossbeam_queue::ArrayQueue;
 use redis::aio::{Connection, Monitor, PubSub};
 use redis::{aio::ConnectionLike, Cmd, RedisFuture, Value};
@@ -95,116 +94,69 @@ impl RedisPoolConnection<Connection> {
     pub fn into_pubsub(mut self) -> RedisPoolPubSub {
         let permit = self.permit.take();
         let queue = self.queue.clone();
-        RedisPoolConnectionVariant::new(self.detach().into_pubsub(), permit, queue)
+        RedisPoolPubSub::new(self.detach().into_pubsub(), permit, queue)
     }
 
-    pub fn into_monitor(mut self) -> RedisPoolMonitor {
-        let permit = self.permit.take();
-        let queue = self.queue.clone();
-        RedisPoolConnectionVariant::new(self.detach().into_monitor(), permit, queue)
+    pub fn into_monitor(self) -> Monitor {
+        self.detach().into_monitor()
     }
 }
 
-type RedisPoolPubSub = RedisPoolConnectionVariant<Connection, PubSub>;
-type RedisPoolMonitor = RedisPoolConnectionVariant<Connection, Monitor>;
-
-#[async_trait]
-pub trait IntoConnection<C>
-where
-    C: redis::aio::ConnectionLike + Send,
-{
-    async fn into_connection(self) -> C;
-}
-
-#[async_trait]
-impl IntoConnection<Connection> for PubSub {
-    async fn into_connection(self) -> Connection {
-        self.into_connection().await
-    }
-}
-
-#[async_trait]
-impl IntoConnection<Connection> for Monitor {
-    async fn into_connection(self) -> Connection {
-        self.into_connection().await
-    }
-}
-
-pub struct RedisPoolConnectionVariant<C, T>
-where
-    C: redis::aio::ConnectionLike + Send + 'static,
-    T: IntoConnection<C> + Send + 'static,
-{
+pub struct RedisPoolPubSub {
     // This field can be safley unwrapped because it is always initialized to Some
     // and only set to None when dropped or detached
-    variant: Option<T>,
+    pubsub: Option<PubSub>,
     permit: Option<OwnedSemaphorePermit>,
-    queue: Arc<ArrayQueue<C>>,
+    queue: Arc<ArrayQueue<Connection>>,
 }
 
-impl<C, T> RedisPoolConnectionVariant<C, T>
-where
-    C: redis::aio::ConnectionLike + Send + 'static,
-    T: IntoConnection<C> + Send + 'static,
-{
+impl RedisPoolPubSub {
     pub fn new(
-        variant: T,
+        pubsub: PubSub,
         permit: Option<OwnedSemaphorePermit>,
-        queue: Arc<ArrayQueue<C>>,
+        queue: Arc<ArrayQueue<Connection>>,
     ) -> Self {
-        RedisPoolConnectionVariant {
-            variant: Some(variant),
+        RedisPoolPubSub {
+            pubsub: Some(pubsub),
             permit,
             queue,
         }
     }
 
-    pub fn detach(mut self) -> T {
-        self.variant.take().unwrap()
+    pub fn detach(mut self) -> PubSub {
+        self.pubsub.take().unwrap()
     }
 
-    pub async fn into_connection(mut self) -> RedisPoolConnection<C> {
+    pub async fn into_connection(mut self) -> RedisPoolConnection<Connection> {
         let permit = self.permit.take();
         let queue = self.queue.clone();
         RedisPoolConnection::new(self.detach().into_connection().await, permit, queue)
     }
 }
 
-impl<C, T> Drop for RedisPoolConnectionVariant<C, T>
-where
-    C: redis::aio::ConnectionLike + Send + 'static,
-    T: IntoConnection<C> + Send + 'static,
-{
+impl Drop for RedisPoolPubSub {
     fn drop(&mut self) {
-        if let Some(variant) = self.variant.take() {
+        if let Some(pubsub) = self.pubsub.take() {
             let permit = self.permit.take();
             let queue = self.queue.clone();
             tokio::spawn(async move {
                 let _permit = permit;
-                let _ = queue.push(variant.into_connection().await);
+                let _ = queue.push(pubsub.into_connection().await);
             });
         }
     }
 }
 
-impl<C, T> Deref for RedisPoolConnectionVariant<C, T>
-where
-    C: redis::aio::ConnectionLike + Send,
-    T: IntoConnection<C> + Send,
-{
-    type Target = T;
+impl Deref for RedisPoolPubSub {
+    type Target = PubSub;
 
     fn deref(&self) -> &Self::Target {
-        self.variant.as_ref().unwrap()
+        self.pubsub.as_ref().unwrap()
     }
 }
 
-impl<C, T> DerefMut for RedisPoolConnectionVariant<C, T>
-where
-    C: redis::aio::ConnectionLike + Send,
-    T: IntoConnection<C> + Send,
-{
+impl DerefMut for RedisPoolPubSub {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        self.variant.as_mut().unwrap()
+        self.pubsub.as_mut().unwrap()
     }
 }
