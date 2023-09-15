@@ -68,6 +68,10 @@ where
 
         self.factory.create().await
     }
+
+    pub fn factory(&self) -> &F {
+        &self.factory
+    }
 }
 
 impl<F, C> Clone for RedisPool<F, C>
