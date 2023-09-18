@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 ### Added
 - Redis Pubsub and monitor support
 - Factory Exposure
-- Testing
+- Testing 
 
 ## 0.2.0 (9. September, 2023)
 
