@@ -27,11 +27,11 @@ where
             tracing::warn!("pool size is greater then connection limit");
         }
 
-        return RedisPool {
+        RedisPool {
             factory,
             queue: Arc::new(ArrayQueue::new(pool_size)),
             sem: con_limit.map(|lim| Arc::new(Semaphore::new(lim))),
-        };
+        }
     }
 
     pub async fn aquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
@@ -80,11 +80,11 @@ where
     C: redis::aio::ConnectionLike + Send,
 {
     fn clone(&self) -> Self {
-        return RedisPool {
+        RedisPool {
             factory: self.factory.clone(),
             queue: self.queue.clone(),
             sem: self.sem.clone(),
-        };
+        }
     }
 }
 

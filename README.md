@@ -28,7 +28,7 @@ RedisPool uses [`tokio`] runtime.
 ```toml
 # Cargo.toml
 [dependencies]
-redis_pool = "0.1"
+redis_pool = "0.2.1"
 ```
 
 #### Cargo Feature Flags
