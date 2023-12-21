@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## 0.3.0 (21. December, 2023)
+### Changed
+- (Breaking) Updated Redis to 0.24.0, Note Redis 7.2 with resp3 can cause breaking changes to older code. @cking
+- Updated Ping test to support newer Redis with resp3 @KrisCarr
+
 ## 0.2.1 (18. September, 2023)
 ### Added
 - Redis Pubsub and monitor support
