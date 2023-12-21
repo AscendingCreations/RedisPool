@@ -86,7 +86,7 @@ impl<'a> TestClusterRedis<'a> {
             self.ports()
                 .iter()
                 .map(|port| format!("redis://127.0.0.1:{}/", port))
-                .collect(),
+                .collect::<Vec<_>>(),
         )
         .build()
         .expect("Client failed to connect")
