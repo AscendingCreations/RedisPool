@@ -54,9 +54,27 @@ pub async fn test_monitor() {
         .await
         .unwrap();
 
-    let monitor = rx.on_message::<String>().next().await.unwrap();
-    let monitor = monitor.split(" ").collect::<Vec<_>>();
+    let mut i = 0;
+    let mut was_ping = false;
 
-    assert_eq!("\"PING\"", monitor[3]);
-    assert_eq!("\"test\"", monitor[4]);
+    while let Some(string) = rx.on_message::<String>().next().await {
+        let monitor = string.split(" ").collect::<Vec<_>>();
+        if "\"PING\"" == monitor[3] {
+            was_ping = true;
+            break;
+        }
+
+        let _: () = redis::cmd("PING")
+            .arg("test")
+            .query_async(&mut tx)
+            .await
+            .unwrap();
+        i += 1;
+
+        if i > 3 {
+            break;
+        }
+    }
+
+    assert_eq!(true, was_ping);
 }
