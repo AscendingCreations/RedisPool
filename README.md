@@ -37,7 +37,7 @@ redis_pool = "0.3.0"
 
 # Example
 
-```rust no_run
+```rust ignore
 use redis_pool::{RedisPool, SingleRedisPool};
 use axum::{Router, routing::get, extract::State};
 use std::net::SocketAddr;
