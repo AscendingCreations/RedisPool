@@ -39,7 +39,6 @@ pub async fn test_simple_get_set_parrallel() -> anyhow::Result<()> {
     let pool = RedisPool::from(cluster.client());
 
     for value in join_all((0..1000).map(|i| {
-        let i = i;
         let pool = pool.clone();
         tokio::spawn(async move { get_set_byte_array(i, &pool).await })
     }))

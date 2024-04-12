@@ -58,7 +58,7 @@ pub async fn test_monitor() {
     let mut was_ping = false;
 
     while let Some(string) = rx.on_message::<String>().next().await {
-        let monitor = string.split(" ").collect::<Vec<_>>();
+        let monitor = string.split(' ').collect::<Vec<_>>();
         if "\"PING\"" == monitor[3] {
             was_ping = true;
             break;
@@ -76,5 +76,5 @@ pub async fn test_monitor() {
         }
     }
 
-    assert_eq!(true, was_ping);
+    assert!(was_ping);
 }
