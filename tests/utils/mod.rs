@@ -5,7 +5,7 @@ use std::ops::Deref;
 use async_trait::async_trait;
 use futures::FutureExt;
 use redis::{
-    aio::{Connection, ConnectionLike},
+    aio::{ConnectionLike, MultiplexedConnection},
     Client, Cmd, ErrorKind, RedisError, RedisFuture, RedisResult, Value,
 };
 use redis_pool::factory::ConnectionFactory;
@@ -100,18 +100,18 @@ pub struct ClosableConnectionFactory(pub Client);
 impl ConnectionFactory<ClosableConnection> for ClosableConnectionFactory {
     async fn create(&self) -> RedisResult<ClosableConnection> {
         Ok(ClosableConnection::new(
-            self.0.get_async_connection().await?,
+            self.0.get_multiplexed_async_connection().await?,
         ))
     }
 }
 
 pub struct ClosableConnection {
-    con: Connection,
+    con: MultiplexedConnection,
     open: bool,
 }
 
 impl ClosableConnection {
-    pub fn new(con: Connection) -> Self {
+    pub fn new(con: MultiplexedConnection) -> Self {
         ClosableConnection { con, open: true }
     }
 

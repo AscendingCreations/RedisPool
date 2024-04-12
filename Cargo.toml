@@ -1,6 +1,6 @@
 [package]
 name = "redis_pool"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Andrew Wheeler <genusistimelord@gmail.com>",  "Wil Gaboury"]
 description = "Library to Provide a redis client and cluster client pools."
 edition = "2021"
@@ -13,18 +13,18 @@ repository = "https://github.com/AscendingCreations/RedisPool"
 cluster = ["redis/cluster-async"]
 
 [dependencies]
-tokio = { version = "1.32.0", features = ["sync"] }
-async-trait = "0.1.71"
-tracing = "0.1.37"
-thiserror = "1.0.43"
-redis = { version = "0.24.0", features = ["aio", "tokio-comp", "cluster-async"]}
-crossbeam-queue = "0.3.8"
+tokio = { version = "1.37.0", features = ["sync"] }
+async-trait = "0.1.80"
+tracing = "0.1.40"
+thiserror = "1.0.58"
+redis = { version = "0.25.3", features = ["aio", "tokio-comp"]}
+crossbeam-queue = "0.3.11"
 
 [dev-dependencies]
-tokio = { version = "1.32.0", features = ["rt-multi-thread", "macros", "process"] }
+tokio = { version = "1.37.0", features = ["rt-multi-thread", "macros", "process"] }
 testcontainers = "0.14.0"
 anyhow = "1.0"
-futures = "0.3.28"
+futures = "0.3.30"
 redis_pool = { path = ".", features = ["cluster"]}
 serial_test = "0.4"
 axum = "0.7"

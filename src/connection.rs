@@ -2,7 +2,7 @@ use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 
 use crossbeam_queue::ArrayQueue;
-use redis::aio::{Connection, Monitor, PubSub};
+//use redis::aio::{Monitor, MultiplexedConnection, PubSub};
 use redis::{aio::ConnectionLike, Cmd, RedisFuture, Value};
 use tokio::sync::OwnedSemaphorePermit;
 
@@ -90,7 +90,8 @@ where
     }
 }
 
-impl RedisPoolConnection<Connection> {
+/*
+impl RedisPoolConnection<MultiplexedConnection> {
     pub fn into_pubsub(mut self) -> RedisPoolPubSub {
         let permit = self.permit.take();
         let queue = self.queue.clone();
@@ -107,14 +108,14 @@ pub struct RedisPoolPubSub {
     // and only set to None when dropped or detached
     pubsub: Option<PubSub>,
     permit: Option<OwnedSemaphorePermit>,
-    queue: Arc<ArrayQueue<Connection>>,
+    queue: Arc<ArrayQueue<MultiplexedConnection>>,
 }
 
 impl RedisPoolPubSub {
     pub fn new(
         pubsub: PubSub,
         permit: Option<OwnedSemaphorePermit>,
-        queue: Arc<ArrayQueue<Connection>>,
+        queue: Arc<ArrayQueue<MultiplexedConnection>>,
     ) -> Self {
         RedisPoolPubSub {
             pubsub: Some(pubsub),
@@ -127,7 +128,7 @@ impl RedisPoolPubSub {
         self.pubsub.take().unwrap()
     }
 
-    pub async fn into_connection(mut self) -> RedisPoolConnection<Connection> {
+    pub async fn into_connection(mut self) -> RedisPoolConnection<MultiplexedConnection> {
         let permit = self.permit.take();
         let queue = self.queue.clone();
         RedisPoolConnection::new(self.detach().into_connection().await, permit, queue)
@@ -159,4 +160,4 @@ impl DerefMut for RedisPoolPubSub {
     fn deref_mut(&mut self) -> &mut Self::Target {
         self.pubsub.as_mut().unwrap()
     }
-}
+}*/

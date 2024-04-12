@@ -1,6 +1,6 @@
 use crate::{connection::RedisPoolConnection, errors::RedisPoolError, factory::ConnectionFactory};
 use crossbeam_queue::ArrayQueue;
-use redis::{aio::Connection, Client, RedisResult};
+use redis::{aio::MultiplexedConnection, Client, RedisResult};
 use std::{ops::Deref, sync::Arc};
 use tokio::sync::Semaphore;
 
@@ -100,7 +100,7 @@ where
     }
 }
 
-pub type SingleRedisPool = RedisPool<Client, Connection>;
+pub type SingleRedisPool = RedisPool<Client, MultiplexedConnection>;
 
 impl From<Client> for SingleRedisPool {
     fn from(value: Client) -> Self {

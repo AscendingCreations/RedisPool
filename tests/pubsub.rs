@@ -1,4 +1,4 @@
-mod utils;
+/*mod utils;
 
 use futures::StreamExt;
 use redis_pool::pool::RedisPool;
@@ -77,4 +77,4 @@ pub async fn test_monitor() {
     }
 
     assert!(was_ping);
-}
+}*/

@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use redis::{
-    aio::{Connection, ConnectionLike},
+    aio::{ConnectionLike, MultiplexedConnection},
     Client, RedisResult,
 };
 
@@ -13,8 +13,8 @@ where
 }
 
 #[async_trait]
-impl ConnectionFactory<Connection> for Client {
-    async fn create(&self) -> RedisResult<Connection> {
-        self.get_async_connection().await
+impl ConnectionFactory<MultiplexedConnection> for Client {
+    async fn create(&self) -> RedisResult<MultiplexedConnection> {
+        self.get_multiplexed_async_connection().await
     }
 }
