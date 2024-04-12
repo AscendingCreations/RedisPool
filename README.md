@@ -40,7 +40,7 @@ redis_pool = "0.3.0"
 ```rust ignore
 use redis_pool::{RedisPool, SingleRedisPool};
 use axum::{Router, routing::get, extract::State};
-use std::net::SocketAddr;
+use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() {
@@ -54,12 +54,8 @@ async fn main() {
         .with_state(pool);
 
     // run it
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    tracing::debug!("listening on {}", addr);
-    axum::Server::bind(&addr)
-        .serve(app.into_make_service())
-        .await
-        .unwrap();
+    let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 async fn test_pool(State(pool): State<SingleRedisPool>) -> String {
