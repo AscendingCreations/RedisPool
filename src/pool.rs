@@ -50,7 +50,7 @@ where
                 .ignore()
                 .cmd("PING")
                 .arg(1)
-                .query_async::<_, (usize,)>(&mut con)
+                .query_async::<(usize,)>(&mut con)
                 .await;
 
             match res {
