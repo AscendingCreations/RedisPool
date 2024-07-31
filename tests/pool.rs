@@ -21,7 +21,7 @@ pub async fn test_simple_get_set_series() -> anyhow::Result<()> {
             .set("test", i)
             .ignore()
             .get("test")
-            .query_async::<_, (i64,)>(&mut con)
+            .query_async::<(i64,)>(&mut con)
             .await?;
         assert_eq!(i, value);
     }
@@ -69,7 +69,7 @@ async fn get_set_byte_array<C: ConnectionLike>(key: &str, con: &mut C) -> anyhow
         .set(key, &DATA[..])
         .ignore()
         .get(key)
-        .query_async::<_, (Vec<u8>,)>(con)
+        .query_async::<(Vec<u8>,)>(con)
         .await
         .context("Failed to set/get from redis")?;
 
