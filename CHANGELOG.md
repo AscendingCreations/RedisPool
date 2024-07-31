@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## 0.5.0 (31. July, 2024)
+### Changed
+- (Breaking) Updated Redis to 0.26.0, Thank you @AkiraMiyakoda
+
 ## 0.4.0 (12. April, 2024)
 ### Changed
 - (Breaking) Updated Redis to 0.25.3, This removes the current support for PubSub abd Monitor. We will attempt to readd these back in.
