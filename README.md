@@ -9,6 +9,7 @@
     <a href="https://crates.io/crates/redis_pool"><img src="https://img.shields.io/crates/v/redis_pool?style=plastic" alt="crates.io"></a>
     <a href="https://docs.rs/redis_pool"><img src="https://docs.rs/redis_pool/badge.svg" alt="docs.rs"></a>
     <img src="https://img.shields.io/badge/min%20rust-1.60-green.svg" alt="Minimum Rust Version">
+    <a href="https://discord.gg/gVXNDwpS3Z"><img src="https://img.shields.io/discord/81844480201728000?label=&labelColor=6A7EC2&logo=discord&logoColor=ffffff&color=7389D8" alt="Discord"></a>
 </div>
 
 ## License
@@ -28,7 +29,7 @@ RedisPool uses [`tokio`] runtime.
 ```toml
 # Cargo.toml
 [dependencies]
-redis_pool = "0.4.0"
+redis_pool = "0.5.0"
 ```
 
 #### Cargo Feature Flags
