@@ -20,7 +20,7 @@ pub async fn test_simple_get_set_series() -> anyhow::Result<()> {
             .set(i, i)
             .ignore()
             .get(i)
-            .query_async::<_, (i64,)>(&mut con)
+            .query_async::<(i64,)>(&mut con)
             .await?;
         assert_eq!(i, value);
     }
@@ -61,7 +61,7 @@ async fn get_set_byte_array(i: usize, pool: &ClusterRedisPool) -> anyhow::Result
         .set(i, &DATA[..])
         .ignore()
         .get(i)
-        .query_async::<_, (Vec<u8>,)>(&mut con)
+        .query_async::<(Vec<u8>,)>(&mut con)
         .await
         .context("Failed to set/get from redis")?;
 
