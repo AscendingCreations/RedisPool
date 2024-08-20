@@ -16,7 +16,7 @@ pub async fn test_simple_get_set_series() -> anyhow::Result<()> {
     let pool = RedisPool::from(redis.client());
 
     for i in 0..50 {
-        let mut con = pool.aquire().await?;
+        let mut con = pool.acquire().await?;
         let (value,) = redis::Pipeline::with_capacity(2)
             .set("test", i)
             .ignore()
@@ -57,7 +57,7 @@ async fn get_set_byte_array_from_pool(
     pool: &SingleRedisPool,
 ) -> anyhow::Result<Vec<u8>> {
     let mut con = pool
-        .aquire()
+        .acquire()
         .await
         .context("Failed to establish connection")?;
 
@@ -81,7 +81,7 @@ pub async fn test_bad_connection_eviction() -> anyhow::Result<()> {
     let docker = Cli::docker();
     let redis = TestRedis::new(&docker);
     let pool = RedisPool::new(ClosableConnectionFactory(redis.client()), 1, Some(1));
-    let mut con = pool.aquire().await.context("Failed to open connection")?;
+    let mut con = pool.acquire().await.context("Failed to open connection")?;
 
     get_set_byte_array("foo", &mut con)
         .await
@@ -96,7 +96,7 @@ pub async fn test_bad_connection_eviction() -> anyhow::Result<()> {
 
     drop(con);
 
-    let mut con = pool.aquire().await.context("Failed to open connection")?;
+    let mut con = pool.acquire().await.context("Failed to open connection")?;
 
     get_set_byte_array("foo", &mut con)
         .await

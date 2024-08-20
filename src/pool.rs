@@ -34,16 +34,16 @@ where
         }
     }
 
-    pub async fn aquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
+    pub async fn acquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
         let permit = match &self.sem {
             Some(sem) => Some(sem.clone().acquire_owned().await?),
             None => None,
         };
-        let con = self.aquire_connection().await?;
+        let con = self.acquire_connection().await?;
         Ok(RedisPoolConnection::new(con, permit, self.queue.clone()))
     }
 
-    async fn aquire_connection(&self) -> RedisResult<C> {
+    async fn acquire_connection(&self) -> RedisResult<C> {
         while let Some(mut con) = self.queue.pop() {
             let res = redis::Pipeline::with_capacity(2)
                 .cmd("UNWATCH")
@@ -67,6 +67,16 @@ where
         }
 
         self.factory.create().await
+    }
+
+    #[deprecated(since = "0.5.0", note = "Please use `acquire` instead")]
+    pub async fn aquire(&self) -> Result<RedisPoolConnection<C>, RedisPoolError> {
+        self.acquire().await
+    }
+
+    #[deprecated(since = "0.5.0", note = "Please use `acquire_connection` instead")]
+    async fn aquire_connection(&self) -> RedisResult<C> {
+        self.acquire_connection().await
     }
 
     pub fn factory(&self) -> &F {
