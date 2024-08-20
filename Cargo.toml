@@ -13,11 +13,11 @@ repository = "https://github.com/AscendingCreations/RedisPool"
 cluster = ["redis/cluster-async"]
 
 [dependencies]
-tokio = { version = "1.39.0", features = ["sync"] }
+tokio = { version = "1.39.3", features = ["sync"] }
 async-trait = "0.1.81"
 tracing = "0.1.40"
 thiserror = "1.0.63"
-redis = { version = "0.26.0", features = ["aio", "tokio-comp"]}
+redis = { version = "0.26.1", features = ["aio", "tokio-comp"]}
 crossbeam-queue = "0.3.11"
 
 [dev-dependencies]

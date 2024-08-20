@@ -60,7 +60,7 @@ async fn main() {
 }
 
 async fn test_pool(State(pool): State<SingleRedisPool>) -> String {
-    let mut connection = pool.aquire().await.unwrap();
+    let mut connection = pool.acquire().await.unwrap();
     let _: () = redis::pipe()
             .set(0, "Hello")
             .ignore()
