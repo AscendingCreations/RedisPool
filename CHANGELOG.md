@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 
+## 0.6.0 (15. September, 2024)
+### Changed
+- (Breaking) Redis 0.26 to 0.27.2.
+
 ## 0.5.1 (20. August, 2024)
 ### Changed
 - Renamed aquire to acquire to fix spelling mistake and depreciated aquire, Thank you @AkiraMiyakoda

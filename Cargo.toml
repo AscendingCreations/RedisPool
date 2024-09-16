@@ -1,6 +1,6 @@
 [package]
 name = "redis_pool"
-version = "0.5.1"
+version = "0.6.0"
 authors = ["Andrew Wheeler <genusistimelord@gmail.com>",  "Wil Gaboury"]
 description = "Library to Provide a redis client and cluster client pools."
 edition = "2021"
