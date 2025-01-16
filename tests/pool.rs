@@ -30,7 +30,7 @@ pub async fn test_simple_get_set_series() -> anyhow::Result<()> {
 }
 
 const DATA_SIZE: usize = 1_048_576;
-const DATA: [u8; DATA_SIZE] = [1; DATA_SIZE];
+static DATA: [u8; DATA_SIZE] = [1; DATA_SIZE];
 
 #[tokio::test]
 pub async fn test_simple_get_set_parrallel() -> anyhow::Result<()> {
