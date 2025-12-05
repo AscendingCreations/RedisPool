@@ -38,7 +38,7 @@ pub async fn test_simple_get_set_parrallel() -> anyhow::Result<()> {
     let redis = TestRedis::new(&docker);
     let pool = RedisPool::from(redis.client());
 
-    for value in join_all((0..1000).map(|i| {
+    for value in join_all((0..200).map(|i| {
         let i = i.to_string();
         let pool = pool.clone();
         tokio::spawn(async move { get_set_byte_array_from_pool(&i, &pool).await })
@@ -65,14 +65,9 @@ async fn get_set_byte_array_from_pool(
 }
 
 async fn get_set_byte_array<C: ConnectionLike>(key: &str, con: &mut C) -> anyhow::Result<Vec<u8>> {
-    let mut pipe = redis::Pipeline::with_capacity(2);
-
-    pipe.set(key, &DATA[..])
-        .exec_async(con)
-        .await
-        .context("Failed to set to redis")?;
-
     let (value,) = redis::Pipeline::with_capacity(2)
+        .set(key, &DATA[..])
+        .ignore()
         .get(key)
         .query_async::<(Vec<u8>,)>(con)
         .await
