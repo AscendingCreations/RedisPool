@@ -123,13 +123,7 @@ impl ClosableConnection {
 impl ConnectionLike for ClosableConnection {
     fn req_packed_command<'a>(&'a mut self, cmd: &'a Cmd) -> RedisFuture<'a, Value> {
         if !self.open {
-            (async move {
-                Err(RedisError::from((
-                    ErrorKind::ResponseError,
-                    "closed connection",
-                )))
-            })
-            .boxed()
+            (async move { Err(RedisError::from((ErrorKind::Io, "closed connection"))) }).boxed()
         } else {
             self.con.req_packed_command(cmd)
         }
@@ -142,13 +136,7 @@ impl ConnectionLike for ClosableConnection {
         count: usize,
     ) -> redis::RedisFuture<'a, Vec<redis::Value>> {
         if !self.open {
-            (async move {
-                Err(RedisError::from((
-                    ErrorKind::ResponseError,
-                    "closed connection",
-                )))
-            })
-            .boxed()
+            (async move { Err(RedisError::from((ErrorKind::Io, "closed connection"))) }).boxed()
         } else {
             self.con.req_packed_commands(cmd, offset, count)
         }
