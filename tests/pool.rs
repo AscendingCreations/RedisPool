@@ -65,13 +65,18 @@ async fn get_set_byte_array_from_pool(
 }
 
 async fn get_set_byte_array<C: ConnectionLike>(key: &str, con: &mut C) -> anyhow::Result<Vec<u8>> {
+    let mut pipe = redis::Pipeline::with_capacity(2);
+
+    pipe.set(key, &DATA[..])
+        .exec_async(con)
+        .await
+        .context("Failed to set to redis")?;
+
     let (value,) = redis::Pipeline::with_capacity(2)
-        .set(key, &DATA[..])
-        .ignore()
         .get(key)
         .query_async::<(Vec<u8>,)>(con)
         .await
-        .context("Failed to set/get from redis")?;
+        .context("Failed to get from redis")?;
 
     Ok(value)
 }
